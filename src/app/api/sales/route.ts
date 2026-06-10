@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { salesSQL } from "@/lib/queries";
+import { salesSQL, addonOptSalesSQL } from "@/lib/queries";
 
 interface SalesRow {
   sale_date: string;
@@ -10,6 +10,14 @@ interface SalesRow {
   userid: string;
   part: string;
   net_sales: number;
+}
+
+interface AddonRow {
+  DAY: string;
+  part: string;
+  ocode: string;
+  product_ocode: string;
+  opt_amount: number;
 }
 
 interface PartData {
@@ -31,7 +39,17 @@ function parseDate(s: string): Date {
   return new Date(y, m - 1, d);
 }
 
-function aggregate(rows: SalesRow[], singleDay: boolean) {
+function filterByHour(rows: SalesRow[], addonRows: AddonRow[], maxHour: number): { rows: SalesRow[]; addon: AddonRow[] } {
+  return {
+    rows: rows.filter((r) => Number(r.sale_hour) <= maxHour),
+    addon: addonRows.filter((a) => {
+      const h = typeof a.DAY === "string" ? Number(a.DAY.slice(11, 13)) : new Date(a.DAY).getHours();
+      return h <= maxHour;
+    }),
+  };
+}
+
+function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) {
   const parts: Record<string, PartData> = {};
   const orderSet = new Set<string>();
   const memberSet = new Set<string>();
@@ -40,6 +58,25 @@ function aggregate(rows: SalesRow[], singleDay: boolean) {
 
   const dailyMap: Record<string, { sales: number; orders: Set<string> }> = {};
   const hourlyMap: Record<number, { sales: number; orders: Set<string> }> = {};
+
+  const addonByPart: Record<string, number> = {};
+  const addonByDate: Record<string, number> = {};
+  const addonByHour: Record<number, number> = {};
+  let totalAddon = 0;
+  for (const a of addonRows) {
+    const amt = Number(a.opt_amount);
+    totalAddon += amt;
+    const p = a.part || "미분류";
+    addonByPart[p] = (addonByPart[p] || 0) + amt;
+    const dateKey = typeof a.DAY === "string"
+      ? a.DAY.slice(0, 10)
+      : new Date(a.DAY).toISOString().slice(0, 10);
+    addonByDate[dateKey] = (addonByDate[dateKey] || 0) + amt;
+    if (singleDay) {
+      const h = typeof a.DAY === "string" ? Number(a.DAY.slice(11, 13)) : new Date(a.DAY).getHours();
+      addonByHour[h] = (addonByHour[h] || 0) + amt;
+    }
+  }
 
   for (const row of rows) {
     const ns = Number(row.net_sales);
@@ -94,34 +131,37 @@ function aggregate(rows: SalesRow[], singleDay: boolean) {
   const totalBuyers = memberSet.size + nonmemberOrders.size;
 
   const daily = Object.entries(dailyMap)
-    .map(([date, d]) => ({ date, sales: Math.round(d.sales), orders: d.orders.size }))
+    .map(([date, d]) => ({ date, sales: Math.round(d.sales + (addonByDate[date] || 0)), orders: d.orders.size }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const hourly = singleDay
     ? Array.from({ length: 24 }, (_, h) => ({
         hour: h,
-        sales: Math.round(hourlyMap[h]?.sales || 0),
+        sales: Math.round((hourlyMap[h]?.sales || 0) + (addonByHour[h] || 0)),
         orders: hourlyMap[h]?.orders.size || 0,
       }))
     : null;
 
   return {
-    totalSales: Math.round(totalSales),
+    totalSales: Math.round(totalSales + totalAddon),
     totalOrders,
     totalBuyers,
     aov: totalOrders ? Math.round(totalSales / totalOrders) : 0,
     parts: Object.fromEntries(
       ["PB", "사입", "위탁", "미분류"]
         .filter((p) => parts[p])
-        .map((p) => [
-          p,
-          {
-            sales: Math.round(parts[p].sales),
-            orders: parts[p].orders,
-            buyers: parts[p].buyers,
-            aov: parts[p].orders ? Math.round(parts[p].sales / parts[p].orders) : 0,
-          },
-        ])
+        .map((p) => {
+          const s = Math.round(parts[p].sales + (addonByPart[p] || 0));
+          return [
+            p,
+            {
+              sales: s,
+              orders: parts[p].orders,
+              buyers: parts[p].buyers,
+              aov: parts[p].orders ? Math.round(s / parts[p].orders) : 0,
+            },
+          ];
+        })
     ),
     daily,
     hourly,
@@ -144,16 +184,34 @@ export async function GET(req: NextRequest) {
     const end = endOfDay(parseDate(endStr));
     const singleDay = startStr === endStr;
 
-    const rows = await query<SalesRow>(salesSQL(start, end));
-    const current = aggregate(rows, singleDay);
+    const [rows, addonRows] = await Promise.all([
+      query<SalesRow>(salesSQL(start, end)),
+      query<AddonRow>(addonOptSalesSQL(start, end)),
+    ]);
+    const current = aggregate(rows, addonRows, singleDay);
 
     let compare = null;
     if (compareStartStr && compareEndStr) {
       const cStart = startOfDay(parseDate(compareStartStr));
       const cEnd = endOfDay(parseDate(compareEndStr));
       const cSingleDay = compareStartStr === compareEndStr;
-      const cRows = await query<SalesRow>(salesSQL(cStart, cEnd));
-      compare = aggregate(cRows, cSingleDay);
+      const [cRows, cAddon] = await Promise.all([
+        query<SalesRow>(salesSQL(cStart, cEnd)),
+        query<AddonRow>(addonOptSalesSQL(cStart, cEnd)),
+      ]);
+
+      const now = new Date(Date.now() + 9 * 60 * 60 * 1000); // KST
+      const todayStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+      const isMainToday = singleDay && startStr === todayStr;
+      const isCompareSingleDay = cSingleDay;
+
+      if (isMainToday && isCompareSingleDay) {
+        const currentHour = now.getUTCHours();
+        const filtered = filterByHour(cRows, cAddon, currentHour);
+        compare = aggregate(filtered.rows, filtered.addon, true);
+      } else {
+        compare = aggregate(cRows, cAddon, cSingleDay);
+      }
     }
 
     return NextResponse.json({ current, compare });
