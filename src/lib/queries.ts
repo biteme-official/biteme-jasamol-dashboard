@@ -28,6 +28,8 @@ function innerSubquery(start: Date, end: Date): string {
       wt_order_product.product_cd,
       wt_order_product.product_nm,
       wt_order_product.qty,
+      wt_product.brand_cd,
+      IFNULL(wt_code2.code_nm2, wt_product.brand_cd) AS brand_nm,
       CASE WHEN wt_order_info.user_id IS NULL THEN '비회원'
            ELSE wt_order_info.user_id
       END AS userid,
@@ -127,6 +129,34 @@ export function salesSQL(start: Date, end: Date): string {
 
 export function addonOptSalesSQL(start: Date, end: Date): string {
   return addonOptSQL(start, end);
+}
+
+export function brandRankingSQL(start: Date, end: Date): string {
+  return `
+    SELECT
+      brand_cd,
+      MAX(brand_nm) as brand_nm,
+      MAX(part) as part,
+      COUNT(DISTINCT ocode) as order_count,
+      ROUND(SUM(net_sales)) as total_sales
+    FROM (
+      SELECT
+        brand_cd, brand_nm, part, ocode,
+        price - coupon
+          - (reserve_raw + IF(trans = 0, 0,
+                     IF(trans_reserve = 0, 0,
+                        ROUND(trans_reserve * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          - (deposit_raw + IF(trans = 0, 0,
+                     IF(trans_deposit = 0, 0,
+                        ROUND(trans_deposit * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          + trans AS net_sales
+      FROM (${innerSubquery(start, end)}) AS sub
+    ) AS brand_sales
+    GROUP BY brand_cd
+    HAVING total_sales > 0
+  `;
 }
 
 export function productRankingSQL(start: Date, end: Date): string {

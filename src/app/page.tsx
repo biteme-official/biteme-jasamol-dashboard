@@ -7,6 +7,7 @@ import CompareSelector from "@/components/CompareSelector";
 import KPICard from "@/components/KPICard";
 import PartBreakdown from "@/components/PartBreakdown";
 import SalesChart from "@/components/SalesChart";
+import BrandRanking from "@/components/BrandRanking";
 import ProductRanking from "@/components/ProductRanking";
 
 interface PartData {
@@ -24,6 +25,14 @@ interface SalesData {
   parts: Record<string, PartData>;
   daily: { date: string; sales: number; orders: number }[];
   hourly: { hour: number; sales: number; orders: number }[] | null;
+}
+
+interface BrandData {
+  brand_cd: string;
+  brand_nm: string;
+  part: string;
+  order_count: number;
+  total_sales: number;
 }
 
 interface ProductData {
@@ -75,6 +84,7 @@ export default function Dashboard() {
 
   const [data, setData] = useState<SalesData | null>(null);
   const [compare, setCompare] = useState<SalesData | null>(null);
+  const [brands, setBrands] = useState<BrandData[]>([]);
   const [products, setProducts] = useState<ProductData[]>([]);
   const [dau, setDau] = useState<DAUData | null>(null);
   const [dauCompare, setDauCompare] = useState<DAUData | null>(null);
@@ -90,9 +100,10 @@ export default function Dashboard() {
         params.set("compareEnd", compareEnd);
       }
 
-      const [salesRes, dauRes, rankRes] = await Promise.all([
+      const [salesRes, dauRes, brandRes, rankRes] = await Promise.all([
         fetch(`/api/sales?${params}`),
         fetch(`/api/dau?${params}`),
+        fetch(`/api/brand-ranking?start=${start}&end=${end}`),
         fetch(`/api/product-ranking?start=${start}&end=${end}`),
       ]);
 
@@ -104,6 +115,11 @@ export default function Dashboard() {
         const dauJson = await dauRes.json();
         setDau(dauJson.current);
         setDauCompare(dauJson.compare);
+      }
+
+      if (brandRes.ok) {
+        const brandJson = await brandRes.json();
+        setBrands(brandJson.brands || []);
       }
 
       if (rankRes.ok) {
@@ -232,6 +248,10 @@ export default function Dashboard() {
               compareDaily={compare?.daily}
               compareHourly={compare?.hourly}
             />
+
+            {brands.length > 0 && (
+              <BrandRanking brands={brands} />
+            )}
 
             {products.length > 0 && (
               <ProductRanking products={products} />
