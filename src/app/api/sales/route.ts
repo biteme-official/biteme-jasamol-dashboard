@@ -206,8 +206,8 @@ export async function GET(req: NextRequest) {
       const isCompareSingleDay = cSingleDay;
 
       if (isMainToday && isCompareSingleDay) {
-        const currentHour = now.getUTCHours();
-        const filtered = filterByHour(cRows, cAddon, currentHour);
+        const lastCompleteHour = now.getUTCHours() - 1;
+        const filtered = filterByHour(cRows, cAddon, lastCompleteHour);
         compare = aggregate(filtered.rows, filtered.addon, true);
       } else {
         compare = aggregate(cRows, cAddon, cSingleDay);
