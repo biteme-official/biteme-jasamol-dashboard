@@ -7,6 +7,7 @@ import CompareSelector from "@/components/CompareSelector";
 import KPICard from "@/components/KPICard";
 import PartBreakdown from "@/components/PartBreakdown";
 import SalesChart from "@/components/SalesChart";
+import ProductRanking from "@/components/ProductRanking";
 
 interface PartData {
   sales: number;
@@ -23,6 +24,15 @@ interface SalesData {
   parts: Record<string, PartData>;
   daily: { date: string; sales: number; orders: number }[];
   hourly: { hour: number; sales: number; orders: number }[] | null;
+}
+
+interface ProductData {
+  product_cd: string;
+  product_nm: string;
+  part: string;
+  order_count: number;
+  total_qty: number;
+  total_sales: number;
 }
 
 interface DAUData {
@@ -65,6 +75,7 @@ export default function Dashboard() {
 
   const [data, setData] = useState<SalesData | null>(null);
   const [compare, setCompare] = useState<SalesData | null>(null);
+  const [products, setProducts] = useState<ProductData[]>([]);
   const [dau, setDau] = useState<DAUData | null>(null);
   const [dauCompare, setDauCompare] = useState<DAUData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -79,9 +90,10 @@ export default function Dashboard() {
         params.set("compareEnd", compareEnd);
       }
 
-      const [salesRes, dauRes] = await Promise.all([
+      const [salesRes, dauRes, rankRes] = await Promise.all([
         fetch(`/api/sales?${params}`),
         fetch(`/api/dau?${params}`),
+        fetch(`/api/product-ranking?start=${start}&end=${end}`),
       ]);
 
       const salesJson = await salesRes.json();
@@ -92,6 +104,11 @@ export default function Dashboard() {
         const dauJson = await dauRes.json();
         setDau(dauJson.current);
         setDauCompare(dauJson.compare);
+      }
+
+      if (rankRes.ok) {
+        const rankJson = await rankRes.json();
+        setProducts(rankJson.products || []);
       }
 
       setLastUpdated(format(new Date(), "HH:mm:ss"));
@@ -215,6 +232,10 @@ export default function Dashboard() {
               compareDaily={compare?.daily}
               compareHourly={compare?.hourly}
             />
+
+            {products.length > 0 && (
+              <ProductRanking products={products} />
+            )}
           </>
         ) : (
           <div className="text-center py-20 text-gray-400">

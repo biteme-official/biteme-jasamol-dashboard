@@ -128,3 +128,32 @@ export function salesSQL(start: Date, end: Date): string {
 export function addonOptSalesSQL(start: Date, end: Date): string {
   return addonOptSQL(start, end);
 }
+
+export function productRankingSQL(start: Date, end: Date): string {
+  return `
+    SELECT
+      product_cd,
+      MAX(product_nm) as product_nm,
+      MAX(part) as part,
+      COUNT(DISTINCT ocode) as order_count,
+      SUM(qty) as total_qty,
+      ROUND(SUM(net_sales)) as total_sales
+    FROM (
+      SELECT
+        product_cd, product_nm, part, ocode, qty,
+        price - coupon
+          - (reserve_raw + IF(trans = 0, 0,
+                     IF(trans_reserve = 0, 0,
+                        ROUND(trans_reserve * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          - (deposit_raw + IF(trans = 0, 0,
+                     IF(trans_deposit = 0, 0,
+                        ROUND(trans_deposit * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          + trans AS net_sales
+      FROM (${innerSubquery(start, end)}) AS sub
+    ) AS product_sales
+    GROUP BY product_cd
+    HAVING total_sales > 0
+  `;
+}
