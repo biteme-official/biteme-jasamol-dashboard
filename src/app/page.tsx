@@ -213,27 +213,32 @@ export default function Dashboard() {
                 label="총 매출"
                 value={`${n(data.totalSales)}원`}
                 diff={compare ? diffPct(data.totalSales, compare.totalSales) : null}
+                prevValue={compare ? `${n(compare.totalSales)}원` : undefined}
               />
               <KPICard
                 label="주문 수"
                 value={`${n(data.totalOrders)}건`}
                 diff={compare ? diffPct(data.totalOrders, compare.totalOrders) : null}
+                prevValue={compare ? `${n(compare.totalOrders)}건` : undefined}
               />
               <KPICard
                 label="평균 주문금액"
                 value={`${n(data.aov)}원`}
                 diff={compare ? diffPct(data.aov, compare.aov) : null}
+                prevValue={compare ? `${n(compare.aov)}원` : undefined}
               />
               <KPICard
                 label="구매자 수"
                 value={`${n(data.totalBuyers)}명`}
                 diff={compare ? diffPct(data.totalBuyers, compare.totalBuyers) : null}
+                prevValue={compare ? `${n(compare.totalBuyers)}명` : undefined}
               />
               <KPICard
                 label="DAU"
                 value={dau ? `${n(dau.totalDAU)}명` : "-"}
                 sub={dau && dau.daily.length > 1 ? `일평균 ${n(dau.avgDAU)}명` : dau ? `App ${n(dau.totalApp)} · Web ${n(dau.totalWeb)}` : "Airbridge 연동중"}
                 diff={dau && dauCompare ? diffPct(dau.totalDAU, dauCompare.totalDAU) : null}
+                prevValue={dauCompare ? `${n(dauCompare.totalDAU)}명` : undefined}
               />
             </div>
 

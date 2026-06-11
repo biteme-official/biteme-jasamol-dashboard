@@ -3,9 +3,10 @@ interface Props {
   value: string;
   sub?: string;
   diff?: number | null;
+  prevValue?: string;
 }
 
-export default function KPICard({ label, value, sub, diff }: Props) {
+export default function KPICard({ label, value, sub, diff, prevValue }: Props) {
   const hasDiff = diff !== null && diff !== undefined && !isNaN(diff);
   const isPositive = hasDiff && diff > 0;
   const isNegative = hasDiff && diff < 0;
@@ -14,7 +15,7 @@ export default function KPICard({ label, value, sub, diff }: Props) {
     <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-1">
       <span className="text-sm text-gray-500">{label}</span>
       <span className="text-2xl font-bold text-gray-900">{value}</span>
-      <div className="flex items-center gap-2 mt-1">
+      <div className="flex items-center gap-2 mt-1 flex-wrap">
         {sub && <span className="text-xs text-gray-400">{sub}</span>}
         {hasDiff && (
           <span
@@ -25,6 +26,9 @@ export default function KPICard({ label, value, sub, diff }: Props) {
             {isPositive ? "▲" : isNegative ? "▼" : ""}
             {Math.abs(diff).toFixed(1)}%
           </span>
+        )}
+        {prevValue && (
+          <span className="text-xs text-gray-300">{prevValue}</span>
         )}
       </div>
     </div>
