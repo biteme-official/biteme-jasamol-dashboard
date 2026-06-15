@@ -159,6 +159,46 @@ export function brandRankingSQL(start: Date, end: Date): string {
   `;
 }
 
+export function brandPartMapSQL(): string {
+  return `
+    SELECT
+      wt_product.brand_cd,
+      IFNULL(wt_code2.code_nm2, wt_product.brand_cd) AS brand_nm,
+      CASE
+        WHEN wt_admin.company_nm NOT LIKE '%바잇미%' THEN '위탁'
+        WHEN wt_admin.company_nm LIKE '%바잇미%'
+             AND wt_product.brand_cd IN (${PB}) THEN 'PB'
+        WHEN wt_admin.company_nm LIKE '%바잇미%'
+             AND wt_product.brand_cd NOT IN (${PB}) THEN '사입'
+        ELSE '미분류'
+      END AS part
+    FROM wt_product
+    LEFT JOIN wt_admin ON wt_product.supplier = wt_admin.\`no\`
+    LEFT JOIN wt_code2 ON wt_product.brand_cd = wt_code2.code_cd2
+    GROUP BY wt_product.brand_cd
+  `;
+}
+
+export function productPartMapSQL(): string {
+  return `
+    SELECT
+      wt_product.product_cd AS item_id,
+      wt_product.product_nm AS item_name,
+      IFNULL(wt_code2.code_nm2, wt_product.brand_cd) AS brand_nm,
+      CASE
+        WHEN wt_admin.company_nm NOT LIKE '%바잇미%' THEN '위탁'
+        WHEN wt_admin.company_nm LIKE '%바잇미%'
+             AND wt_product.brand_cd IN (${PB}) THEN 'PB'
+        WHEN wt_admin.company_nm LIKE '%바잇미%'
+             AND wt_product.brand_cd NOT IN (${PB}) THEN '사입'
+        ELSE '미분류'
+      END AS part
+    FROM wt_product
+    LEFT JOIN wt_admin ON wt_product.supplier = wt_admin.\`no\`
+    LEFT JOIN wt_code2 ON wt_product.brand_cd = wt_code2.code_cd2
+  `;
+}
+
 export function productRankingSQL(start: Date, end: Date): string {
   return `
     SELECT

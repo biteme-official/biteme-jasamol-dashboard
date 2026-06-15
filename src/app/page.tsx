@@ -9,6 +9,9 @@ import PartBreakdown from "@/components/PartBreakdown";
 import SalesChart from "@/components/SalesChart";
 import BrandRanking from "@/components/BrandRanking";
 import ProductRanking from "@/components/ProductRanking";
+import TrafficAnalysis from "@/components/TrafficAnalysis";
+
+type Tab = "dashboard" | "traffic";
 
 interface PartData {
   sales: number;
@@ -90,6 +93,7 @@ export default function Dashboard() {
   const [dauCompare, setDauCompare] = useState<DAUData | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -160,9 +164,30 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold text-gray-900">BITEME</h1>
-            <span className="text-sm text-gray-400">Analytics · 자사몰</span>
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button
+                onClick={() => setActiveTab("dashboard")}
+                className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "dashboard"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                대시보드
+              </button>
+              <button
+                onClick={() => setActiveTab("traffic")}
+                className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "traffic"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                유입분석
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <PeriodSelector onSelect={handlePeriod} />
@@ -178,94 +203,99 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-gray-800">{label}</h2>
-            {lastUpdated && (
-              <span className="text-xs text-gray-400">
-                마지막 업데이트 {lastUpdated}
-              </span>
-            )}
-          </div>
-          <CompareSelector
-            mainStart={start}
-            mainEnd={end}
-            onChange={handleCompare}
-          />
-        </div>
-
-        {compare && compareLabel && (
-          <div className="text-xs text-gray-500 bg-gray-100 rounded-md px-3 py-1.5 inline-block">
-            vs {compareLabel}
-          </div>
-        )}
-
-        {loading && !data ? (
-          <div className="text-center py-20 text-gray-400">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mb-3" />
-            <p>DB 조회 중... (10~20초)</p>
-          </div>
-        ) : data ? (
+        {activeTab === "dashboard" ? (
           <>
-            {/* KPI Cards - 매출 + DAU */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <KPICard
-                label="총 매출"
-                value={`${n(data.totalSales)}원`}
-                diff={compare ? diffPct(data.totalSales, compare.totalSales) : null}
-                prevValue={compare ? `${n(compare.totalSales)}원` : undefined}
-              />
-              <KPICard
-                label="주문 수"
-                value={`${n(data.totalOrders)}건`}
-                diff={compare ? diffPct(data.totalOrders, compare.totalOrders) : null}
-                prevValue={compare ? `${n(compare.totalOrders)}건` : undefined}
-              />
-              <KPICard
-                label="평균 주문금액"
-                value={`${n(data.aov)}원`}
-                diff={compare ? diffPct(data.aov, compare.aov) : null}
-                prevValue={compare ? `${n(compare.aov)}원` : undefined}
-              />
-              <KPICard
-                label="구매자 수"
-                value={`${n(data.totalBuyers)}명`}
-                diff={compare ? diffPct(data.totalBuyers, compare.totalBuyers) : null}
-                prevValue={compare ? `${n(compare.totalBuyers)}명` : undefined}
-              />
-              <KPICard
-                label="DAU"
-                value={dau ? `${n(dau.totalDAU)}명` : "-"}
-                sub={dau && dau.daily.length > 1 ? `일평균 ${n(dau.avgDAU)}명` : dau ? `App ${n(dau.totalApp)} · Web ${n(dau.totalWeb)}` : "Airbridge 연동중"}
-                diff={dau && dauCompare ? diffPct(dau.totalDAU, dauCompare.totalDAU) : null}
-                prevValue={dauCompare ? `${n(dauCompare.totalDAU)}명` : undefined}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-bold text-gray-800">{label}</h2>
+                {lastUpdated && (
+                  <span className="text-xs text-gray-400">
+                    마지막 업데이트 {lastUpdated}
+                  </span>
+                )}
+              </div>
+              <CompareSelector
+                mainStart={start}
+                mainEnd={end}
+                onChange={handleCompare}
               />
             </div>
 
-            <PartBreakdown
-              parts={data.parts}
-              compareParts={compare?.parts}
-            />
-
-            <SalesChart
-              daily={data.daily}
-              hourly={data.hourly}
-              compareDaily={compare?.daily}
-              compareHourly={compare?.hourly}
-            />
-
-            {brands.length > 0 && (
-              <BrandRanking brands={brands} />
+            {compare && compareLabel && (
+              <div className="text-xs text-gray-500 bg-gray-100 rounded-md px-3 py-1.5 inline-block">
+                vs {compareLabel}
+              </div>
             )}
 
-            {products.length > 0 && (
-              <ProductRanking products={products} />
+            {loading && !data ? (
+              <div className="text-center py-20 text-gray-400">
+                <div className="animate-spin inline-block w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mb-3" />
+                <p>DB 조회 중... (10~20초)</p>
+              </div>
+            ) : data ? (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <KPICard
+                    label="총 매출"
+                    value={`${n(data.totalSales)}원`}
+                    diff={compare ? diffPct(data.totalSales, compare.totalSales) : null}
+                    prevValue={compare ? `${n(compare.totalSales)}원` : undefined}
+                  />
+                  <KPICard
+                    label="주문 수"
+                    value={`${n(data.totalOrders)}건`}
+                    diff={compare ? diffPct(data.totalOrders, compare.totalOrders) : null}
+                    prevValue={compare ? `${n(compare.totalOrders)}건` : undefined}
+                  />
+                  <KPICard
+                    label="평균 주문금액"
+                    value={`${n(data.aov)}원`}
+                    diff={compare ? diffPct(data.aov, compare.aov) : null}
+                    prevValue={compare ? `${n(compare.aov)}원` : undefined}
+                  />
+                  <KPICard
+                    label="구매자 수"
+                    value={`${n(data.totalBuyers)}명`}
+                    diff={compare ? diffPct(data.totalBuyers, compare.totalBuyers) : null}
+                    prevValue={compare ? `${n(compare.totalBuyers)}명` : undefined}
+                  />
+                  <KPICard
+                    label="DAU"
+                    value={dau ? `${n(dau.totalDAU)}명` : "-"}
+                    sub={dau && dau.daily.length > 1 ? `일평균 ${n(dau.avgDAU)}명` : dau ? `App ${n(dau.totalApp)} · Web ${n(dau.totalWeb)}` : "Airbridge 연동중"}
+                    diff={dau && dauCompare ? diffPct(dau.totalDAU, dauCompare.totalDAU) : null}
+                    prevValue={dauCompare ? `${n(dauCompare.totalDAU)}명` : undefined}
+                  />
+                </div>
+
+                <PartBreakdown
+                  parts={data.parts}
+                  compareParts={compare?.parts}
+                />
+
+                <SalesChart
+                  daily={data.daily}
+                  hourly={data.hourly}
+                  compareDaily={compare?.daily}
+                  compareHourly={compare?.hourly}
+                />
+
+                {brands.length > 0 && (
+                  <BrandRanking brands={brands} />
+                )}
+
+                {products.length > 0 && (
+                  <ProductRanking products={products} />
+                )}
+              </>
+            ) : (
+              <div className="text-center py-20 text-gray-400">
+                데이터를 불러올 수 없습니다
+              </div>
             )}
           </>
         ) : (
-          <div className="text-center py-20 text-gray-400">
-            데이터를 불러올 수 없습니다
-          </div>
+          <TrafficAnalysis start={start} end={end} label={label} />
         )}
       </main>
     </div>
