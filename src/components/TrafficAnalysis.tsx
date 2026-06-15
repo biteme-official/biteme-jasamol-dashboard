@@ -36,8 +36,8 @@ type SortKey = "views" | "purchases" | "cvr";
 
 const PART_FILTERS: PartFilter[] = ["전체", "PB", "사입", "위탁"];
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: "views", label: "조회수" },
-  { key: "purchases", label: "구매수" },
+  { key: "views", label: "조회자" },
+  { key: "purchases", label: "구매자" },
   { key: "cvr", label: "CVR" },
 ];
 
@@ -191,19 +191,19 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
           {/* KPI Summary */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-              <div className="text-xs text-gray-500 mb-1">총 조회수</div>
+              <div className="text-xs text-gray-500 mb-1">조회자 (UV)</div>
               <div className="text-xl font-bold text-gray-900 tabular-nums">
                 {n(totalViews)}
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-              <div className="text-xs text-gray-500 mb-1">총 구매수</div>
+              <div className="text-xs text-gray-500 mb-1">구매자 (UV)</div>
               <div className="text-xl font-bold text-gray-900 tabular-nums">
                 {n(totalPurchases)}
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-              <div className="text-xs text-gray-500 mb-1">평균 CVR</div>
+              <div className="text-xs text-gray-500 mb-1">CVR</div>
               <div className="text-xl font-bold text-orange-600 tabular-nums">
                 {avgCvr}%
               </div>
@@ -281,8 +281,8 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                   브랜드
                 </span>
               )}
-              <span className="w-16 text-right shrink-0">조회</span>
-              <span className="w-16 text-right shrink-0">구매</span>
+              <span className="w-16 text-right shrink-0">조회자</span>
+              <span className="w-16 text-right shrink-0">구매자</span>
               <span className="w-14 text-right shrink-0">CVR</span>
             </div>
 

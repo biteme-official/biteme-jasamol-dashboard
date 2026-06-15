@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     const [brandViewsRes, brandPurchasesRes] = await Promise.all([
       querySegmentation({
         eventType: "view_detailpage",
-        metric: "totals",
+        metric: "uniques",
         start: ampStart,
         end: ampEnd,
         groupBy: { type: "event", value: "brand_name" },
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       }),
       querySegmentation({
         eventType: "complete_item_order",
-        metric: "totals",
+        metric: "uniques",
         start: ampStart,
         end: ampEnd,
         groupBy: { type: "event", value: "brand_name" },
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     const [productViewsRes, productPurchasesRes] = await Promise.all([
       querySegmentation({
         eventType: "view_detailpage",
-        metric: "totals",
+        metric: "uniques",
         start: ampStart,
         end: ampEnd,
         groupBy: { type: "event", value: "item_id" },
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
       }),
       querySegmentation({
         eventType: "complete_item_order",
-        metric: "totals",
+        metric: "uniques",
         start: ampStart,
         end: ampEnd,
         groupBy: { type: "event", value: "item_id" },
