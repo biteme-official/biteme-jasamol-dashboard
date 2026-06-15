@@ -157,10 +157,6 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
     setPage(0);
   }
 
-  const totalViewers = data?.summary.viewers ?? 0;
-  const totalBuyers = data?.summary.buyers ?? 0;
-  const totalCvr = data?.summary.cvr ?? 0;
-
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -194,28 +190,6 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
         </div>
       ) : data ? (
         <>
-          {/* KPI Summary */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-              <div className="text-xs text-gray-500 mb-1">조회자 (UV)</div>
-              <div className="text-xl font-bold text-gray-900 tabular-nums">
-                {n(totalViewers)}
-              </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-              <div className="text-xs text-gray-500 mb-1">구매자 (UV)</div>
-              <div className="text-xl font-bold text-gray-900 tabular-nums">
-                {n(totalBuyers)}
-              </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-              <div className="text-xs text-gray-500 mb-1">CVR</div>
-              <div className="text-xl font-bold text-orange-600 tabular-nums">
-                {totalCvr}%
-              </div>
-            </div>
-          </div>
-
           {/* Daily Trend Chart */}
           {data.daily.length >= 2 && (
             <div className="bg-white border border-gray-200 rounded-xl p-5">

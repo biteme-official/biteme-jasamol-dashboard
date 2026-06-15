@@ -234,7 +234,7 @@ export default function Dashboard() {
               </div>
             ) : data ? (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                   <KPICard
                     label="총 매출"
                     value={`${n(data.totalSales)}원`}
@@ -265,6 +265,19 @@ export default function Dashboard() {
                     sub={dau && dau.daily.length > 1 ? `일평균 ${n(dau.avgDAU)}명` : dau ? `App ${n(dau.totalApp)} · Web ${n(dau.totalWeb)}` : "Airbridge 연동중"}
                     diff={dau && dauCompare ? diffPct(dau.totalDAU, dauCompare.totalDAU) : null}
                     prevValue={dauCompare ? `${n(dauCompare.totalDAU)}명` : undefined}
+                  />
+                  <KPICard
+                    label="CVR"
+                    value={dau && dau.totalDAU > 0 ? `${(Math.round((data.totalBuyers / dau.totalDAU) * 10000) / 100)}%` : "-"}
+                    sub={dau ? `구매자 ${n(data.totalBuyers)} / DAU ${n(dau.totalDAU)}` : "DAU 데이터 대기중"}
+                    diff={
+                      dau && dauCompare && compare && dauCompare.totalDAU > 0
+                        ? diffPct(
+                            data.totalBuyers / dau.totalDAU,
+                            compare.totalBuyers / dauCompare.totalDAU
+                          )
+                        : null
+                    }
                   />
                 </div>
 
