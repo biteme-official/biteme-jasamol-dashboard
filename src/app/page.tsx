@@ -10,9 +10,8 @@ import SalesChart from "@/components/SalesChart";
 import BrandRanking from "@/components/BrandRanking";
 import ProductRanking from "@/components/ProductRanking";
 import TrafficAnalysis from "@/components/TrafficAnalysis";
-import ChannelAnalysis from "@/components/ChannelAnalysis";
 
-type Tab = "dashboard" | "traffic" | "channel";
+type Tab = "dashboard" | "traffic";
 
 interface PartData {
   sales: number;
@@ -188,16 +187,6 @@ export default function Dashboard() {
               >
                 전환분석
               </button>
-              <button
-                onClick={() => setActiveTab("channel")}
-                className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === "channel"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                유입분석
-              </button>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -305,10 +294,8 @@ export default function Dashboard() {
               </div>
             )}
           </>
-        ) : activeTab === "traffic" ? (
-          <TrafficAnalysis start={start} end={end} label={label} />
         ) : (
-          <ChannelAnalysis start={start} end={end} label={label} />
+          <TrafficAnalysis start={start} end={end} label={label} />
         )}
       </main>
     </div>
