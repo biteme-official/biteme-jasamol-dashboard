@@ -12,9 +12,9 @@ export default function KPICard({ label, value, sub, diff, prevValue }: Props) {
   const isNegative = hasDiff && diff < 0;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-1">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-2xl font-bold text-gray-900">{value}</span>
+    <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5 flex flex-col gap-0.5 sm:gap-1">
+      <span className="text-xs sm:text-sm text-gray-500">{label}</span>
+      <span className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{value}</span>
       <div className="flex items-center gap-2 mt-1 flex-wrap">
         {sub && <span className="text-xs text-gray-400">{sub}</span>}
         {hasDiff && (

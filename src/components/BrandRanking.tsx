@@ -68,8 +68,8 @@ export default function BrandRanking({ brands }: Props) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+    <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5">
+      <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
         <h3 className="text-sm font-bold text-gray-700">브랜드별 매출 순위</h3>
         <div className="flex items-center gap-1.5">
           {SORT_OPTIONS.map((opt) => (
@@ -138,10 +138,10 @@ export default function BrandRanking({ brands }: Props) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 shrink-0 text-right">
-                  <div className="w-24">
+                <div className="flex items-center gap-2 sm:gap-4 shrink-0 text-right">
+                  <div className="w-[72px] sm:w-24">
                     <div
-                      className={`text-sm tabular-nums ${
+                      className={`text-xs sm:text-sm tabular-nums ${
                         sortKey === "total_sales"
                           ? "font-bold text-orange-600"
                           : "text-gray-500"
@@ -150,9 +150,9 @@ export default function BrandRanking({ brands }: Props) {
                       {n(item.total_sales)}원
                     </div>
                   </div>
-                  <div className="w-14">
+                  <div className="w-10 sm:w-14">
                     <div
-                      className={`text-xs tabular-nums ${
+                      className={`text-[10px] sm:text-xs tabular-nums ${
                         sortKey === "order_count"
                           ? "font-bold text-orange-600"
                           : "text-gray-400"

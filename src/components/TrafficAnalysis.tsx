@@ -252,14 +252,14 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
         <>
           {/* Purchase Funnel */}
           {funnel && funnel.steps.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-center justify-between mb-5">
+            <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5">
+              <div className="flex items-center justify-between mb-3 sm:mb-5">
                 <h3 className="text-sm font-bold text-gray-700">구매 퍼널</h3>
-                <span className="text-[10px] text-gray-400">
+                <span className="text-[10px] text-gray-400 hidden sm:inline">
                   전환 윈도우 24시간 · ordered
                 </span>
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-2 sm:space-y-2.5">
                 {funnel.steps.map((step, i) => {
                   const maxCount = funnel.steps[0].count;
                   const widthPct =
@@ -274,25 +274,25 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                   ];
                   return (
                     <div key={step.label}>
-                      <div className="flex items-center gap-3">
-                        <span className="w-28 text-xs text-gray-600 text-right shrink-0">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <span className="w-16 sm:w-28 text-[10px] sm:text-xs text-gray-600 text-right shrink-0">
                           {step.label}
                         </span>
                         <div className="flex-1 relative">
                           <div
-                            className={`h-10 rounded-lg bg-gradient-to-r ${colors[i] || colors[0]} flex items-center px-3 transition-all`}
-                            style={{ width: `${widthPct}%`, minWidth: "60px" }}
+                            className={`h-8 sm:h-10 rounded-lg bg-gradient-to-r ${colors[i] || colors[0]} flex items-center px-2 sm:px-3 transition-all`}
+                            style={{ width: `${widthPct}%`, minWidth: "50px" }}
                           >
-                            <span className="text-xs font-bold text-white whitespace-nowrap">
+                            <span className="text-[10px] sm:text-xs font-bold text-white whitespace-nowrap">
                               {n(step.count)}명
                             </span>
                           </div>
                         </div>
-                        <div className="w-20 text-right shrink-0">
+                        <div className="w-14 sm:w-20 text-right shrink-0">
                           {i === 0 ? (
-                            <span className="text-xs text-gray-400">시작</span>
+                            <span className="text-[10px] sm:text-xs text-gray-400">시작</span>
                           ) : (
-                            <div className="text-xs">
+                            <div className="text-[10px] sm:text-xs">
                               <span className="font-bold text-orange-600">
                                 {step.stepRate}%
                               </span>
@@ -301,7 +301,7 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                         </div>
                       </div>
                       {i > 0 && step.dropoff > 0 && (
-                        <div className="ml-[7.75rem] mt-0.5 text-[10px] text-gray-400">
+                        <div className="ml-[4.5rem] sm:ml-[7.75rem] mt-0.5 text-[10px] text-gray-400 hidden sm:block">
                           ▼ {n(step.dropoff)}명 이탈
                         </div>
                       )}
@@ -333,34 +333,34 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
 
           {/* Engagement Summary */}
           {data.summary.avgViewsPerUser > 0 && (
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <div className="text-xs text-gray-400 mb-1">인당 평균 뷰수</div>
-                <div className="text-xl font-bold text-gray-800">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4">
+                <div className="text-[10px] sm:text-xs text-gray-400 mb-1">인당 평균 뷰수</div>
+                <div className="text-base sm:text-xl font-bold text-gray-800">
                   {data.summary.avgViewsPerUser}
-                  <span className="text-sm font-normal text-gray-400 ml-0.5">
+                  <span className="text-xs sm:text-sm font-normal text-gray-400 ml-0.5">
                     회
                   </span>
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1">
+                <div className="text-[10px] text-gray-400 mt-1 hidden sm:block">
                   총 {n(data.summary.totalViews)}회 / {n(data.summary.viewers)}명
                 </div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <div className="text-xs text-gray-400 mb-1">조회자 수 (유니크)</div>
-                <div className="text-xl font-bold text-gray-800">
+              <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4">
+                <div className="text-[10px] sm:text-xs text-gray-400 mb-1">조회자 수</div>
+                <div className="text-base sm:text-xl font-bold text-gray-800">
                   {n(data.summary.viewers)}
-                  <span className="text-sm font-normal text-gray-400 ml-0.5">
+                  <span className="text-xs sm:text-sm font-normal text-gray-400 ml-0.5">
                     명
                   </span>
                 </div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <div className="text-xs text-gray-400 mb-1">전환율 (조회→구매)</div>
-                <div className="text-xl font-bold text-orange-600">
+              <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4">
+                <div className="text-[10px] sm:text-xs text-gray-400 mb-1">전환율</div>
+                <div className="text-base sm:text-xl font-bold text-orange-600">
                   {data.summary.cvr}%
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1">
+                <div className="text-[10px] text-gray-400 mt-1 hidden sm:block">
                   구매자 {n(data.summary.buyers)}명
                 </div>
               </div>
@@ -369,11 +369,11 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
 
           {/* Daily Trend Chart */}
           {data.daily.length >= 2 && (
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <h3 className="text-sm font-bold text-gray-700 mb-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5">
+              <h3 className="text-sm font-bold text-gray-700 mb-3 sm:mb-4">
                 일별 전환 추이
               </h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart
                   data={data.daily.map((d) => ({
                     ...d,
@@ -440,8 +440,8 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
 
           {/* Promotion Funnel */}
           {promoFunnel && promoFunnel.promotions.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
-              <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5">
+              <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <h3 className="text-sm font-bold text-gray-700">
                   기획전별 퍼널
                 </h3>
@@ -553,9 +553,9 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
           )}
 
           {/* Main Card */}
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5">
             {/* View toggle + Sort */}
-            <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => changeTab("brand")}
@@ -613,9 +613,9 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
             </div>
 
             {/* Table header */}
-            <div className="flex items-center gap-3 px-1 pb-2 border-b border-gray-200 text-xs text-gray-400">
-              <span className="w-6 text-right shrink-0">#</span>
-              <span className="flex-1">
+            <div className="flex items-center gap-2 sm:gap-3 px-1 pb-2 border-b border-gray-200 text-[10px] sm:text-xs text-gray-400">
+              <span className="w-5 sm:w-6 text-right shrink-0">#</span>
+              <span className="flex-1 min-w-0">
                 {viewTab === "brand" ? "브랜드" : "상품"}
               </span>
               {viewTab === "product" && (
@@ -623,9 +623,9 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                   브랜드
                 </span>
               )}
-              <span className="w-16 text-right shrink-0">조회자</span>
-              <span className="w-16 text-right shrink-0">구매자</span>
-              <span className="w-14 text-right shrink-0">CVR</span>
+              <span className="w-10 sm:w-16 text-right shrink-0">조회자</span>
+              <span className="w-10 sm:w-16 text-right shrink-0">구매자</span>
+              <span className="w-10 sm:w-14 text-right shrink-0">CVR</span>
             </div>
 
             {/* Ranking items */}
@@ -641,20 +641,20 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                   return (
                     <div
                       key={item.name}
-                      className="flex items-center gap-3 py-3"
+                      className="flex items-center gap-2 sm:gap-3 py-2.5 sm:py-3"
                     >
-                      <span className="text-sm font-bold text-gray-300 w-6 text-right shrink-0">
+                      <span className="text-xs sm:text-sm font-bold text-gray-300 w-5 sm:w-6 text-right shrink-0">
                         {rank}
                       </span>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-800 truncate">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <span className="text-xs sm:text-sm font-medium text-gray-800 truncate">
                             {item.name}
                           </span>
                           {partFilter === "전체" && (
                             <span
-                              className={`text-[10px] leading-none px-1.5 py-0.5 rounded-full font-medium shrink-0 ${
+                              className={`text-[10px] leading-none px-1 sm:px-1.5 py-0.5 rounded-full font-medium shrink-0 ${
                                 PART_BADGE[item.part] || PART_BADGE.미분류
                               }`}
                             >
@@ -671,7 +671,7 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                       )}
 
                       <div
-                        className={`w-16 text-right text-sm tabular-nums shrink-0 ${
+                        className={`w-10 sm:w-16 text-right text-xs sm:text-sm tabular-nums shrink-0 ${
                           sortKey === "views"
                             ? "font-bold text-orange-600"
                             : "text-gray-500"
@@ -681,7 +681,7 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                       </div>
 
                       <div
-                        className={`w-16 text-right text-sm tabular-nums shrink-0 ${
+                        className={`w-10 sm:w-16 text-right text-xs sm:text-sm tabular-nums shrink-0 ${
                           sortKey === "purchases"
                             ? "font-bold text-orange-600"
                             : "text-gray-500"
@@ -691,7 +691,7 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                       </div>
 
                       <div
-                        className={`w-14 text-right text-sm tabular-nums shrink-0 ${
+                        className={`w-10 sm:w-14 text-right text-xs sm:text-sm tabular-nums shrink-0 ${
                           sortKey === "cvr"
                             ? "font-bold text-orange-600"
                             : "text-gray-500"

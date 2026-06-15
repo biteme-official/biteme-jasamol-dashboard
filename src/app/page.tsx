@@ -162,14 +162,14 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-gray-900">BITEME</h1>
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-7xl mx-auto space-y-2 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">BITEME</h1>
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               <button
                 onClick={() => setActiveTab("dashboard")}
-                className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   activeTab === "dashboard"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
@@ -179,7 +179,7 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={() => setActiveTab("traffic")}
-                className={`px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   activeTab === "traffic"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
@@ -189,12 +189,14 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <PeriodSelector onSelect={handlePeriod} />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex-1 overflow-x-auto scrollbar-hide">
+              <PeriodSelector onSelect={handlePeriod} />
+            </div>
             <button
               onClick={fetchData}
               disabled={loading}
-              className="px-4 py-1.5 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+              className="px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-50 disabled:opacity-50 shrink-0"
             >
               {loading ? "조회중..." : "새로고침"}
             </button>
@@ -202,7 +204,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {activeTab === "dashboard" ? (
           <>
             <div className="flex items-center justify-between flex-wrap gap-3">
@@ -234,7 +236,7 @@ export default function Dashboard() {
               </div>
             ) : data ? (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                   <KPICard
                     label="총 매출"
                     value={`${n(data.totalSales)}원`}
