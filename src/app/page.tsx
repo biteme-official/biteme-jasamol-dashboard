@@ -259,26 +259,48 @@ export default function Dashboard() {
                     diff={compare ? diffPct(data.totalBuyers, compare.totalBuyers) : null}
                     prevValue={compare ? `${n(compare.totalBuyers)}명` : undefined}
                   />
-                  <KPICard
-                    label="DAU"
-                    value={dau ? `${n(dau.totalDAU)}명` : "-"}
-                    sub={dau && dau.daily.length > 1 ? `일평균 ${n(dau.avgDAU)}명` : dau ? `App ${n(dau.totalApp)} · Web ${n(dau.totalWeb)}` : "Airbridge 연동중"}
-                    diff={dau && dauCompare ? diffPct(dau.totalDAU, dauCompare.totalDAU) : null}
-                    prevValue={dauCompare ? `${n(dauCompare.totalDAU)}명` : undefined}
-                  />
-                  <KPICard
-                    label="CVR"
-                    value={dau && dau.totalDAU > 0 ? `${(Math.round((data.totalBuyers / dau.totalDAU) * 10000) / 100)}%` : "-"}
-                    sub={dau ? `구매자 ${n(data.totalBuyers)} / DAU ${n(dau.totalDAU)}` : "DAU 데이터 대기중"}
-                    diff={
-                      dau && dauCompare && compare && dauCompare.totalDAU > 0
-                        ? diffPct(
-                            data.totalBuyers / dau.totalDAU,
-                            compare.totalBuyers / dauCompare.totalDAU
-                          )
-                        : null
-                    }
-                  />
+                  {(() => {
+                    const todayStr = fmt(new Date());
+                    const isPartial = start === end && end === todayStr;
+                    return (
+                      <>
+                        <KPICard
+                          label="DAU"
+                          value={dau ? `${n(dau.totalDAU)}명` : "-"}
+                          sub={
+                            isPartial && dau
+                              ? `진행중 · App ${n(dau.totalApp)} · Web ${n(dau.totalWeb)}`
+                              : dau && dau.daily.length > 1
+                              ? `일평균 ${n(dau.avgDAU)}명`
+                              : dau
+                              ? `App ${n(dau.totalApp)} · Web ${n(dau.totalWeb)}`
+                              : "Airbridge 연동중"
+                          }
+                          diff={dau && dauCompare && !isPartial ? diffPct(dau.totalDAU, dauCompare.totalDAU) : null}
+                          prevValue={dauCompare && !isPartial ? `${n(dauCompare.totalDAU)}명` : undefined}
+                        />
+                        <KPICard
+                          label="CVR"
+                          value={dau && dau.totalDAU > 0 ? `${(Math.round((data.totalBuyers / dau.totalDAU) * 10000) / 100)}%` : "-"}
+                          sub={
+                            isPartial && dau
+                              ? `진행중 · 구매자 ${n(data.totalBuyers)} / DAU ${n(dau.totalDAU)}`
+                              : dau
+                              ? `구매자 ${n(data.totalBuyers)} / DAU ${n(dau.totalDAU)}`
+                              : "DAU 데이터 대기중"
+                          }
+                          diff={
+                            dau && dauCompare && compare && dauCompare.totalDAU > 0 && !isPartial
+                              ? diffPct(
+                                  data.totalBuyers / dau.totalDAU,
+                                  compare.totalBuyers / dauCompare.totalDAU
+                                )
+                              : null
+                          }
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <PartBreakdown
