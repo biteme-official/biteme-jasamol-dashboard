@@ -38,6 +38,19 @@ interface DailyItem {
   cvr: number;
 }
 
+interface FunnelStep {
+  label: string;
+  count: number;
+  overallRate: number;
+  stepRate: number;
+  dropoff: number;
+}
+
+interface FunnelData {
+  steps: FunnelStep[];
+  daily: { date: string; viewers: number; buyers: number; cvr: number }[];
+}
+
 interface TrafficData {
   summary: { viewers: number; buyers: number; cvr: number };
   daily: DailyItem[];
@@ -87,6 +100,9 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
 
+  const [funnel, setFunnel] = useState<FunnelData | null>(null);
+  const [funnelLoading, setFunnelLoading] = useState(false);
+
   const [viewTab, setViewTab] = useState<ViewTab>("brand");
   const [partFilter, setPartFilter] = useState<PartFilter>("전체");
   const [sortKey, setSortKey] = useState<SortKey>("views");
@@ -119,9 +135,27 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
     }
   }, [start, end]);
 
+  const fetchFunnel = useCallback(async () => {
+    setFunnelLoading(true);
+    try {
+      const res = await fetch(
+        `/api/amplitude/funnel?start=${start}&end=${end}`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setFunnel(json);
+      }
+    } catch (e) {
+      console.warn("Funnel fetch failed:", e);
+    } finally {
+      setFunnelLoading(false);
+    }
+  }, [start, end]);
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchFunnel();
+  }, [fetchData, fetchFunnel]);
 
   const items = useMemo(() => {
     if (!data) return [];
@@ -190,6 +224,87 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
         </div>
       ) : data ? (
         <>
+          {/* Purchase Funnel */}
+          {funnel && funnel.steps.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-sm font-bold text-gray-700">구매 퍼널</h3>
+                <span className="text-[10px] text-gray-400">
+                  전환 윈도우 24시간 · ordered
+                </span>
+              </div>
+              <div className="space-y-2.5">
+                {funnel.steps.map((step, i) => {
+                  const maxCount = funnel.steps[0].count;
+                  const widthPct =
+                    maxCount > 0
+                      ? Math.max(8, (step.count / maxCount) * 100)
+                      : 0;
+                  const colors = [
+                    "from-orange-500 to-orange-400",
+                    "from-amber-500 to-amber-400",
+                    "from-yellow-500 to-yellow-400",
+                    "from-emerald-500 to-emerald-400",
+                  ];
+                  return (
+                    <div key={step.label}>
+                      <div className="flex items-center gap-3">
+                        <span className="w-28 text-xs text-gray-600 text-right shrink-0">
+                          {step.label}
+                        </span>
+                        <div className="flex-1 relative">
+                          <div
+                            className={`h-10 rounded-lg bg-gradient-to-r ${colors[i] || colors[0]} flex items-center px-3 transition-all`}
+                            style={{ width: `${widthPct}%`, minWidth: "60px" }}
+                          >
+                            <span className="text-xs font-bold text-white whitespace-nowrap">
+                              {n(step.count)}명
+                            </span>
+                          </div>
+                        </div>
+                        <div className="w-20 text-right shrink-0">
+                          {i === 0 ? (
+                            <span className="text-xs text-gray-400">시작</span>
+                          ) : (
+                            <div className="text-xs">
+                              <span className="font-bold text-orange-600">
+                                {step.stepRate}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {i > 0 && step.dropoff > 0 && (
+                        <div className="ml-[7.75rem] mt-0.5 text-[10px] text-gray-400">
+                          ▼ {n(step.dropoff)}명 이탈
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                <span className="text-xs text-gray-500">
+                  전체 전환율 (조회 → 구매)
+                </span>
+                <span className="text-sm font-bold text-orange-600">
+                  {funnel.steps[funnel.steps.length - 1].overallRate}%
+                </span>
+              </div>
+            </div>
+          )}
+          {funnelLoading && !funnel && (
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <h3 className="text-sm font-bold text-gray-700 mb-4">
+                구매 퍼널
+              </h3>
+              <div className="text-center py-6 text-gray-400 text-sm">
+                <div className="animate-spin inline-block w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full mb-2" />
+                <p>퍼널 데이터 조회 중...</p>
+              </div>
+            </div>
+          )}
+
           {/* Daily Trend Chart */}
           {data.daily.length >= 2 && (
             <div className="bg-white border border-gray-200 rounded-xl p-5">

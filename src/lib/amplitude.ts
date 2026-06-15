@@ -60,6 +60,38 @@ export function parseTrend(res: AmplitudeResponse): { total: number; daily: { da
   return { total, daily };
 }
 
+interface FunnelQuery {
+  events: { event_type: string }[];
+  start: string;
+  end: string;
+  mode?: "ordered" | "unordered";
+  conversionSeconds?: number;
+}
+
+export async function queryFunnel(q: FunnelQuery) {
+  const auth = Buffer.from(`${API_KEY}:${SECRET_KEY}`).toString("base64");
+
+  const parts = q.events.map(
+    (ev) => `e=${encodeURIComponent(JSON.stringify({ event_type: ev.event_type }))}`
+  );
+  parts.push(`start=${q.start}`);
+  parts.push(`end=${q.end}`);
+  parts.push(`mode=${q.mode || "ordered"}`);
+  parts.push("n=active");
+  if (q.conversionSeconds) parts.push(`cs=${q.conversionSeconds}`);
+
+  const res = await fetch(`${BASE}/funnels?${parts.join("&")}`, {
+    headers: { Authorization: `Basic ${auth}` },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Amplitude funnel ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
 export function parseGroupBy(res: AmplitudeResponse): { name: string; users: number }[] {
   const labels = res.data.seriesLabels || [];
   const collapsed = res.data.seriesCollapsed || [];
