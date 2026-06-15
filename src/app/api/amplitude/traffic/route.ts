@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { querySegmentation, parseGroupBy } from "@/lib/amplitude";
+import { querySegmentation, parseTrend, parseGroupBy } from "@/lib/amplitude";
 import { query as dbQuery } from "@/lib/db";
 import { brandPartMapSQL, productPartMapSQL } from "@/lib/queries";
 
@@ -52,6 +52,21 @@ export async function GET(req: NextRequest) {
         productPartRows = p;
       })
       .catch((e) => console.warn("RDS mapping unavailable:", e));
+
+    const [totalViewsRes, totalPurchasesRes] = await Promise.all([
+      querySegmentation({
+        eventType: "view_detailpage",
+        metric: "uniques",
+        start: ampStart,
+        end: ampEnd,
+      }),
+      querySegmentation({
+        eventType: "complete_item_order",
+        metric: "uniques",
+        start: ampStart,
+        end: ampEnd,
+      }),
+    ]);
 
     const [brandViewsRes, brandPurchasesRes] = await Promise.all([
       querySegmentation({
@@ -156,7 +171,18 @@ export async function GET(req: NextRequest) {
         };
       });
 
-    return Response.json({ brands, products });
+    const totalViewers = parseTrend(totalViewsRes).total;
+    const totalBuyers = parseTrend(totalPurchasesRes).total;
+    const totalCvr =
+      totalViewers > 0
+        ? Math.round((totalBuyers / totalViewers) * 10000) / 100
+        : 0;
+
+    return Response.json({
+      summary: { viewers: totalViewers, buyers: totalBuyers, cvr: totalCvr },
+      brands,
+      products,
+    });
   } catch (e) {
     console.error("Traffic API error:", e);
     return Response.json({ error: String(e) }, { status: 500 });

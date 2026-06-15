@@ -20,6 +20,7 @@ interface ProductItem {
 }
 
 interface TrafficData {
+  summary: { viewers: number; buyers: number; cvr: number };
   brands: BrandItem[];
   products: ProductItem[];
 }
@@ -131,29 +132,9 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
     setPage(0);
   }
 
-  const totalViews = useMemo(() => {
-    if (!data) return 0;
-    const source = viewTab === "brand" ? data.brands : data.products;
-    const filtered =
-      partFilter === "전체"
-        ? source
-        : source.filter((item) => item.part === partFilter);
-    return filtered.reduce((s, item) => s + item.views, 0);
-  }, [data, viewTab, partFilter]);
-
-  const totalPurchases = useMemo(() => {
-    if (!data) return 0;
-    const source = viewTab === "brand" ? data.brands : data.products;
-    const filtered =
-      partFilter === "전체"
-        ? source
-        : source.filter((item) => item.part === partFilter);
-    return filtered.reduce((s, item) => s + item.purchases, 0);
-  }, [data, viewTab, partFilter]);
-
-  const avgCvr = totalViews > 0
-    ? Math.round((totalPurchases / totalViews) * 10000) / 100
-    : 0;
+  const totalViewers = data?.summary.viewers ?? 0;
+  const totalBuyers = data?.summary.buyers ?? 0;
+  const totalCvr = data?.summary.cvr ?? 0;
 
   return (
     <div className="space-y-5">
@@ -193,19 +174,19 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
             <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
               <div className="text-xs text-gray-500 mb-1">조회자 (UV)</div>
               <div className="text-xl font-bold text-gray-900 tabular-nums">
-                {n(totalViews)}
+                {n(totalViewers)}
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
               <div className="text-xs text-gray-500 mb-1">구매자 (UV)</div>
               <div className="text-xl font-bold text-gray-900 tabular-nums">
-                {n(totalPurchases)}
+                {n(totalBuyers)}
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
               <div className="text-xs text-gray-500 mb-1">CVR</div>
               <div className="text-xl font-bold text-orange-600 tabular-nums">
-                {avgCvr}%
+                {totalCvr}%
               </div>
             </div>
           </div>
