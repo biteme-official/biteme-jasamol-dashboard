@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       })
       .catch((e) => console.warn("RDS mapping unavailable:", e));
 
-    const [totalViewsRes, totalPurchasesRes] = await Promise.all([
+    const [totalViewsRes, totalPurchasesRes, totalViewsCountRes] = await Promise.all([
       querySegmentation({
         eventType: "view_detailpage",
         metric: "uniques",
@@ -63,6 +63,12 @@ export async function GET(req: NextRequest) {
       querySegmentation({
         eventType: "complete_item_order",
         metric: "uniques",
+        start: ampStart,
+        end: ampEnd,
+      }),
+      querySegmentation({
+        eventType: "view_detailpage",
+        metric: "totals",
         start: ampStart,
         end: ampEnd,
       }),
@@ -173,24 +179,39 @@ export async function GET(req: NextRequest) {
 
     const viewsTrend = parseTrend(totalViewsRes);
     const buyersTrend = parseTrend(totalPurchasesRes);
+    const viewsCountTrend = parseTrend(totalViewsCountRes);
 
     const totalViewers = viewsTrend.total;
     const totalBuyers = buyersTrend.total;
+    const totalViewsCount = viewsCountTrend.total;
     const totalCvr =
       totalViewers > 0
         ? Math.round((totalBuyers / totalViewers) * 10000) / 100
+        : 0;
+    const avgViewsPerUser =
+      totalViewers > 0
+        ? Math.round((totalViewsCount / totalViewers) * 100) / 100
         : 0;
 
     const daily = viewsTrend.daily.map((d, i) => {
       const viewers = d.value;
       const buyers = buyersTrend.daily[i]?.value || 0;
+      const totalViews = viewsCountTrend.daily[i]?.value || 0;
       const cvr =
         viewers > 0 ? Math.round((buyers / viewers) * 10000) / 100 : 0;
-      return { date: d.date, viewers, buyers, cvr };
+      const avgViews =
+        viewers > 0 ? Math.round((totalViews / viewers) * 100) / 100 : 0;
+      return { date: d.date, viewers, buyers, cvr, totalViews, avgViews };
     });
 
     return Response.json({
-      summary: { viewers: totalViewers, buyers: totalBuyers, cvr: totalCvr },
+      summary: {
+        viewers: totalViewers,
+        buyers: totalBuyers,
+        cvr: totalCvr,
+        totalViews: totalViewsCount,
+        avgViewsPerUser,
+      },
       daily,
       brands,
       products,

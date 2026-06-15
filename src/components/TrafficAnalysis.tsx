@@ -36,6 +36,8 @@ interface DailyItem {
   viewers: number;
   buyers: number;
   cvr: number;
+  totalViews: number;
+  avgViews: number;
 }
 
 interface FunnelStep {
@@ -65,7 +67,13 @@ interface PromotionFunnelData {
 }
 
 interface TrafficData {
-  summary: { viewers: number; buyers: number; cvr: number };
+  summary: {
+    viewers: number;
+    buyers: number;
+    cvr: number;
+    totalViews: number;
+    avgViewsPerUser: number;
+  };
   daily: DailyItem[];
   brands: BrandItem[];
   products: ProductItem[];
@@ -323,6 +331,42 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
             </div>
           )}
 
+          {/* Engagement Summary */}
+          {data.summary.avgViewsPerUser > 0 && (
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="text-xs text-gray-400 mb-1">인당 평균 뷰수</div>
+                <div className="text-xl font-bold text-gray-800">
+                  {data.summary.avgViewsPerUser}
+                  <span className="text-sm font-normal text-gray-400 ml-0.5">
+                    회
+                  </span>
+                </div>
+                <div className="text-[10px] text-gray-400 mt-1">
+                  총 {n(data.summary.totalViews)}회 / {n(data.summary.viewers)}명
+                </div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="text-xs text-gray-400 mb-1">조회자 수 (유니크)</div>
+                <div className="text-xl font-bold text-gray-800">
+                  {n(data.summary.viewers)}
+                  <span className="text-sm font-normal text-gray-400 ml-0.5">
+                    명
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="text-xs text-gray-400 mb-1">전환율 (조회→구매)</div>
+                <div className="text-xl font-bold text-orange-600">
+                  {data.summary.cvr}%
+                </div>
+                <div className="text-[10px] text-gray-400 mt-1">
+                  구매자 {n(data.summary.buyers)}명
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Daily Trend Chart */}
           {data.daily.length >= 2 && (
             <div className="bg-white border border-gray-200 rounded-xl p-5">
@@ -350,7 +394,8 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                   <Tooltip
                     formatter={(v, name) => {
                       const val = Number(v);
-                      if (name === "CVR") return [`${val}%`, name];
+                      if (name === "CVR" || name === "인당뷰수")
+                        return [name === "CVR" ? `${val}%` : `${val}회`, name];
                       return [n(val), name];
                     }}
                   />
@@ -376,6 +421,16 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                     name="CVR"
                     stroke="#ef4444"
                     strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="avgViews"
+                    name="인당뷰수"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    strokeDasharray="4 2"
                     dot={{ r: 3 }}
                   />
                 </BarChart>
