@@ -1,6 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface BrandItem {
   name: string;
@@ -19,8 +31,16 @@ interface ProductItem {
   cvr: number;
 }
 
+interface DailyItem {
+  date: string;
+  viewers: number;
+  buyers: number;
+  cvr: number;
+}
+
 interface TrafficData {
   summary: { viewers: number; buyers: number; cvr: number };
+  daily: DailyItem[];
   brands: BrandItem[];
   products: ProductItem[];
 }
@@ -44,6 +64,11 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 const PAGE_SIZE = 10;
 const MAX_ITEMS = 30;
+
+function formatDate(d: string): string {
+  const parts = d.split("-");
+  return `${Number(parts[1])}/${Number(parts[2])}`;
+}
 
 const PART_BADGE: Record<string, string> = {
   PB: "bg-orange-100 text-orange-700",
@@ -190,6 +215,66 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Daily Trend Chart */}
+          {data.daily.length >= 2 && (
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <h3 className="text-sm font-bold text-gray-700 mb-4">
+                일별 전환 추이
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={data.daily.map((d) => ({
+                    ...d,
+                    date: formatDate(d.date),
+                  }))}
+                  margin={{ top: 5, right: 50, bottom: 5, left: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(v) => `${v}%`}
+                    domain={[0, "auto"]}
+                  />
+                  <Tooltip
+                    formatter={(v, name) => {
+                      const val = Number(v);
+                      if (name === "CVR") return [`${val}%`, name];
+                      return [n(val), name];
+                    }}
+                  />
+                  <Legend />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="viewers"
+                    name="조회자"
+                    fill="#f97316"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="buyers"
+                    name="구매자"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="cvr"
+                    name="CVR"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
           {/* Main Card */}
           <div className="bg-white border border-gray-200 rounded-xl p-5">

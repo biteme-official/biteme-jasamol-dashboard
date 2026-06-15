@@ -171,15 +171,27 @@ export async function GET(req: NextRequest) {
         };
       });
 
-    const totalViewers = parseTrend(totalViewsRes).total;
-    const totalBuyers = parseTrend(totalPurchasesRes).total;
+    const viewsTrend = parseTrend(totalViewsRes);
+    const buyersTrend = parseTrend(totalPurchasesRes);
+
+    const totalViewers = viewsTrend.total;
+    const totalBuyers = buyersTrend.total;
     const totalCvr =
       totalViewers > 0
         ? Math.round((totalBuyers / totalViewers) * 10000) / 100
         : 0;
 
+    const daily = viewsTrend.daily.map((d, i) => {
+      const viewers = d.value;
+      const buyers = buyersTrend.daily[i]?.value || 0;
+      const cvr =
+        viewers > 0 ? Math.round((buyers / viewers) * 10000) / 100 : 0;
+      return { date: d.date, viewers, buyers, cvr };
+    });
+
     return Response.json({
       summary: { viewers: totalViewers, buyers: totalBuyers, cvr: totalCvr },
+      daily,
       brands,
       products,
     });
