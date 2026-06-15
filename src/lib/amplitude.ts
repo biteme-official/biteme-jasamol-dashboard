@@ -60,8 +60,13 @@ export function parseTrend(res: AmplitudeResponse): { total: number; daily: { da
   return { total, daily };
 }
 
+interface FunnelEvent {
+  event_type: string;
+  group_by?: { type: string; value: string }[];
+}
+
 interface FunnelQuery {
-  events: { event_type: string }[];
+  events: FunnelEvent[];
   start: string;
   end: string;
   mode?: "ordered" | "unordered";
@@ -71,9 +76,11 @@ interface FunnelQuery {
 export async function queryFunnel(q: FunnelQuery) {
   const auth = Buffer.from(`${API_KEY}:${SECRET_KEY}`).toString("base64");
 
-  const parts = q.events.map(
-    (ev) => `e=${encodeURIComponent(JSON.stringify({ event_type: ev.event_type }))}`
-  );
+  const parts = q.events.map((ev) => {
+    const obj: Record<string, unknown> = { event_type: ev.event_type };
+    if (ev.group_by) obj.group_by = ev.group_by;
+    return `e=${encodeURIComponent(JSON.stringify(obj))}`;
+  });
   parts.push(`start=${q.start}`);
   parts.push(`end=${q.end}`);
   parts.push(`mode=${q.mode || "ordered"}`);

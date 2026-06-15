@@ -51,6 +51,19 @@ interface FunnelData {
   daily: { date: string; viewers: number; buyers: number; cvr: number }[];
 }
 
+interface PromotionItem {
+  name: string;
+  steps: { label: string; count: number; rate: number }[];
+  entry: number;
+  final: number;
+  cvr: number;
+}
+
+interface PromotionFunnelData {
+  stepLabels: string[];
+  promotions: PromotionItem[];
+}
+
 interface TrafficData {
   summary: { viewers: number; buyers: number; cvr: number };
   daily: DailyItem[];
@@ -102,6 +115,8 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
 
   const [funnel, setFunnel] = useState<FunnelData | null>(null);
   const [funnelLoading, setFunnelLoading] = useState(false);
+  const [promoFunnel, setPromoFunnel] = useState<PromotionFunnelData | null>(null);
+  const [promoSort, setPromoSort] = useState<"entry" | "cvr">("entry");
 
   const [viewTab, setViewTab] = useState<ViewTab>("brand");
   const [partFilter, setPartFilter] = useState<PartFilter>("전체");
@@ -138,12 +153,15 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
   const fetchFunnel = useCallback(async () => {
     setFunnelLoading(true);
     try {
-      const res = await fetch(
-        `/api/amplitude/funnel?start=${start}&end=${end}`
-      );
-      if (res.ok) {
-        const json = await res.json();
-        setFunnel(json);
+      const [funnelRes, promoRes] = await Promise.all([
+        fetch(`/api/amplitude/funnel?start=${start}&end=${end}`),
+        fetch(`/api/amplitude/promotion-funnel?start=${start}&end=${end}`),
+      ]);
+      if (funnelRes.ok) {
+        setFunnel(await funnelRes.json());
+      }
+      if (promoRes.ok) {
+        setPromoFunnel(await promoRes.json());
       }
     } catch (e) {
       console.warn("Funnel fetch failed:", e);
@@ -362,6 +380,120 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
                   />
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Promotion Funnel */}
+          {promoFunnel && promoFunnel.promotions.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                <h3 className="text-sm font-bold text-gray-700">
+                  기획전별 퍼널
+                </h3>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPromoSort("entry")}
+                    className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                      promoSort === "entry"
+                        ? "bg-gray-900 text-white"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    유입순
+                  </button>
+                  <button
+                    onClick={() => setPromoSort("cvr")}
+                    className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                      promoSort === "cvr"
+                        ? "bg-gray-900 text-white"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    CVR순
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-gray-400">
+                      <th className="text-left py-2 pr-2 font-medium w-6">#</th>
+                      <th className="text-left py-2 pr-3 font-medium min-w-[160px]">
+                        기획전
+                      </th>
+                      {promoFunnel.stepLabels.map((label) => (
+                        <th
+                          key={label}
+                          className="text-right py-2 px-1.5 font-medium whitespace-nowrap"
+                        >
+                          {label}
+                        </th>
+                      ))}
+                      <th className="text-right py-2 pl-2 font-medium">CVR</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[...promoFunnel.promotions]
+                      .sort((a, b) =>
+                        promoSort === "cvr"
+                          ? b.cvr - a.cvr
+                          : b.entry - a.entry
+                      )
+                      .map((promo, idx) => {
+                        const maxEntry = promoFunnel.promotions[0].entry;
+                        return (
+                          <tr key={promo.name} className="hover:bg-gray-50">
+                            <td className="py-2.5 pr-2 text-gray-300 font-bold">
+                              {idx + 1}
+                            </td>
+                            <td className="py-2.5 pr-3">
+                              <div className="max-w-[220px] truncate text-gray-800 font-medium">
+                                {promo.name}
+                              </div>
+                            </td>
+                            {promo.steps.map((step) => (
+                              <td
+                                key={step.label}
+                                className="py-2.5 px-1.5 text-right"
+                              >
+                                <div className="text-gray-700 tabular-nums">
+                                  {n(step.count)}
+                                </div>
+                                <div className="mt-0.5">
+                                  <div
+                                    className="h-1 rounded-full bg-orange-300 ml-auto"
+                                    style={{
+                                      width: `${maxEntry > 0 ? Math.max(4, (step.count / maxEntry) * 100) : 0}%`,
+                                    }}
+                                  />
+                                </div>
+                              </td>
+                            ))}
+                            <td className="py-2.5 pl-2 text-right">
+                              <span
+                                className={`font-bold tabular-nums ${
+                                  promo.cvr >= 10
+                                    ? "text-emerald-600"
+                                    : promo.cvr >= 5
+                                      ? "text-orange-600"
+                                      : "text-gray-500"
+                                }`}
+                              >
+                                {promo.cvr}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-3 pt-2 border-t border-gray-100 text-[10px] text-gray-400">
+                기획전 조회 → 상세페이지 → 장바구니 → 구매완료 · 전환 윈도우
+                24시간
+              </div>
             </div>
           )}
 
