@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, subDays, subWeeks, subMonths, subYears, differenceInDays } from "date-fns";
 
 const fmt = (d: Date) => format(d, "yyyy-MM-dd");
@@ -10,10 +10,11 @@ type ComparePreset = "auto" | "custom" | "off";
 interface Props {
   mainStart: string;
   mainEnd: string;
+  periodLabel: string;
   onChange: (compareStart: string | null, compareEnd: string | null, label: string) => void;
 }
 
-export default function CompareSelector({ mainStart, mainEnd, onChange }: Props) {
+export default function CompareSelector({ mainStart, mainEnd, periodLabel, onChange }: Props) {
   const [mode, setMode] = useState<ComparePreset>("auto");
   const [autoType, setAutoType] = useState("전기간");
   const [customStart, setCustomStart] = useState("");
@@ -26,9 +27,19 @@ export default function CompareSelector({ mainStart, mainEnd, onChange }: Props)
 
     switch (type) {
       case "전기간": {
-        const ce = subDays(s, 1);
-        const cs = subDays(s, days + 1);
-        return [fmt(cs), fmt(ce), `전기간 (${fmt(cs)} ~ ${fmt(ce)})`];
+        if (periodLabel.includes("달")) {
+          const cs = subMonths(s, 1);
+          const ce = subMonths(e, 1);
+          return [fmt(cs), fmt(ce), `전기간 (${fmt(cs)} ~ ${fmt(ce)})`];
+        } else if (periodLabel.includes("주")) {
+          const cs = subWeeks(s, 1);
+          const ce = subWeeks(e, 1);
+          return [fmt(cs), fmt(ce), `전기간 (${fmt(cs)} ~ ${fmt(ce)})`];
+        } else {
+          const ce = subDays(s, 1);
+          const cs = subDays(s, days + 1);
+          return [fmt(cs), fmt(ce), `전기간 (${fmt(cs)} ~ ${fmt(ce)})`];
+        }
       }
       case "전주": {
         const cs = subWeeks(s, 1);
@@ -49,6 +60,14 @@ export default function CompareSelector({ mainStart, mainEnd, onChange }: Props)
         return [fmt(subDays(s, days + 1)), fmt(subDays(s, 1)), "전기간"];
     }
   }
+
+  useEffect(() => {
+    if (mode === "auto") {
+      const [cs, ce, lbl] = calcAuto(autoType);
+      onChange(cs, ce, lbl);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mainStart, mainEnd, periodLabel]);
 
   function handleAutoChange(type: string) {
     setAutoType(type);
