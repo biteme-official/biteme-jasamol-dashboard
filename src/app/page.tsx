@@ -157,6 +157,7 @@ export default function Dashboard() {
           <CompareSelector
             mainStart={start}
             mainEnd={end}
+            periodLabel={label}
             onChange={handleCompare}
           />
         </div>
