@@ -46,9 +46,9 @@ export default function SalesChart({ daily, hourly, compareDaily, compareHourly 
     }));
 
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5">
         <h3 className="text-sm font-bold text-gray-700 mb-4">시간별 매출 추이</h3>
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={260}>
           <BarChart data={merged} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -79,9 +79,9 @@ export default function SalesChart({ daily, hourly, compareDaily, compareHourly 
   }));
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-5">
       <h3 className="text-sm font-bold text-gray-700 mb-4">일별 매출 추이</h3>
-      <ResponsiveContainer width="100%" height={320}>
+      <ResponsiveContainer width="100%" height={260}>
         <BarChart data={merged} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="label" tick={{ fontSize: 12 }} />

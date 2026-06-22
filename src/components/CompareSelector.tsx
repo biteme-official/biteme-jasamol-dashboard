@@ -92,35 +92,37 @@ export default function CompareSelector({ mainStart, mainEnd, periodLabel, onCha
   }
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
-      <span className="text-sm text-gray-500">비교:</span>
+    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+      <span className="text-xs sm:text-sm text-gray-500">비교:</span>
 
       {/* Mode toggle */}
-      {(["auto", "custom", "off"] as ComparePreset[]).map((m) => {
-        const labels = { auto: "프리셋", custom: "직접 설정", off: "끄기" };
-        return (
-          <button
-            key={m}
-            onClick={() => handleModeChange(m)}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-              mode === m
-                ? "bg-gray-700 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {labels[m]}
-          </button>
-        );
-      })}
+      <div className="flex items-center gap-1">
+        {(["auto", "custom", "off"] as ComparePreset[]).map((m) => {
+          const labels = { auto: "프리셋", custom: "직접", off: "끄기" };
+          return (
+            <button
+              key={m}
+              onClick={() => handleModeChange(m)}
+              className={`px-2 sm:px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                mode === m
+                  ? "bg-gray-700 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {labels[m]}
+            </button>
+          );
+        })}
+      </div>
 
       {/* Auto presets */}
       {mode === "auto" && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {["전기간", "전주", "전월", "전년동기"].map((type) => (
             <button
               key={type}
               onClick={() => handleAutoChange(type)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`px-2 sm:px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                 autoType === type
                   ? "bg-orange-500 text-white"
                   : "bg-orange-50 text-orange-600 hover:bg-orange-100"
@@ -134,23 +136,23 @@ export default function CompareSelector({ mainStart, mainEnd, periodLabel, onCha
 
       {/* Custom date pickers */}
       {mode === "custom" && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <input
             type="date"
             value={customStart}
             onChange={(e) => setCustomStart(e.target.value)}
-            className="border rounded-md px-2 py-1 text-xs"
+            className="border rounded-md px-1.5 sm:px-2 py-1 text-xs w-[120px] sm:w-auto"
           />
           <span className="text-gray-400 text-xs">~</span>
           <input
             type="date"
             value={customEnd}
             onChange={(e) => setCustomEnd(e.target.value)}
-            className="border rounded-md px-2 py-1 text-xs"
+            className="border rounded-md px-1.5 sm:px-2 py-1 text-xs w-[120px] sm:w-auto"
           />
           <button
             onClick={handleCustomApply}
-            className="px-2.5 py-1 rounded-md text-xs font-medium bg-orange-500 text-white hover:bg-orange-600"
+            className="px-2 sm:px-2.5 py-1 rounded-md text-xs font-medium bg-orange-500 text-white hover:bg-orange-600 shrink-0"
           >
             적용
           </button>
