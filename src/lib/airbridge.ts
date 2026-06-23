@@ -113,3 +113,64 @@ function extractRows(
     return [];
   }
 }
+
+export interface ChannelDauRow {
+  channel: string;
+  daily: { date: string; app: number; web: number }[];
+  app: number;
+  web: number;
+  total: number;
+}
+
+export async function fetchChannelDAU(
+  from: string,
+  to: string
+): Promise<ChannelDauRow[]> {
+  const res = await fetch(`${BASE}/${APP()}/active-users/query`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      from,
+      to,
+      granularity: "day",
+      metrics: ["app_au", "web_au"],
+      groupBy: { fields: ["channel"] },
+      filters: [],
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Airbridge channel request failed: ${res.status} ${text}`);
+  }
+
+  const json = await res.json();
+  const taskId: string = json.task.taskId;
+  const result = (await pollResult(taskId)) as Record<string, unknown>;
+
+  const activeUsers = result.activeUsers as Record<string, unknown>;
+  const data = activeUsers.data as Array<Record<string, unknown>>;
+
+  return data
+    .map((item) => {
+      const groupBys = item.groupBys as string[];
+      const channel = groupBys[0] || "(none)";
+      const rows = item.rows as Array<Record<string, unknown>>;
+
+      let appTotal = 0;
+      let webTotal = 0;
+      const daily = rows.map((row) => {
+        const dateStr = (row.date as string).slice(0, 10);
+        const values = row.values as Record<string, number>;
+        const app = values.app_au || 0;
+        const web = values.web_au || 0;
+        appTotal += app;
+        webTotal += web;
+        return { date: dateStr, app, web };
+      });
+
+      return { channel, daily, app: appTotal, web: webTotal, total: appTotal + webTotal };
+    })
+    .filter((c) => c.total > 0)
+    .sort((a, b) => b.total - a.total);
+}
