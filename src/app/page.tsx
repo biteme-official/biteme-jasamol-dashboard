@@ -56,6 +56,12 @@ interface DAUData {
   daily: { date: string; app: number; web: number; total: number }[];
 }
 
+interface AllocationRateData {
+  fee: number;
+  netSales: number;
+  rate: number;
+}
+
 const fmt = (d: Date) => format(d, "yyyy-MM-dd");
 
 function n(v: number): string {
@@ -92,6 +98,8 @@ export default function Dashboard() {
   const [products, setProducts] = useState<ProductData[]>([]);
   const [dau, setDau] = useState<DAUData | null>(null);
   const [dauCompare, setDauCompare] = useState<DAUData | null>(null);
+  const [allocationRate, setAllocationRate] = useState<AllocationRateData | null>(null);
+  const [allocationRateCompare, setAllocationRateCompare] = useState<AllocationRateData | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -105,11 +113,12 @@ export default function Dashboard() {
         params.set("compareEnd", compareEnd);
       }
 
-      const [salesRes, dauRes, brandRes, rankRes] = await Promise.all([
+      const [salesRes, dauRes, brandRes, rankRes, allocationRateRes] = await Promise.all([
         fetch(`/api/sales?${params}`),
         fetch(`/api/dau?${params}`),
         fetch(`/api/brand-ranking?start=${start}&end=${end}`),
         fetch(`/api/product-ranking?start=${start}&end=${end}`),
+        fetch(`/api/allocation-rate?${params}`),
       ]);
 
       const salesJson = await salesRes.json();
@@ -130,6 +139,12 @@ export default function Dashboard() {
       if (rankRes.ok) {
         const rankJson = await rankRes.json();
         setProducts(rankJson.products || []);
+      }
+
+      if (allocationRateRes.ok) {
+        const arJson = await allocationRateRes.json();
+        setAllocationRate(arJson.current);
+        setAllocationRateCompare(arJson.compare);
       }
 
       setLastUpdated(format(new Date(), "HH:mm:ss"));
@@ -292,6 +307,20 @@ export default function Dashboard() {
                           }
                           diff={dau && dauCompare && !isPartial ? diffPct(dau.totalDAU, dauCompare.totalDAU) : null}
                           prevValue={dauCompare && !isPartial ? `${n(dauCompare.totalDAU)}명` : undefined}
+                        />
+                        <KPICard
+                          label="위수탁부담금률"
+                          value={allocationRate ? `${allocationRate.rate}%` : "-"}
+                          sub={
+                            allocationRate
+                              ? `부담금 ${n(allocationRate.fee)} / 위탁 순매출 ${n(allocationRate.netSales)}`
+                              : "데이터 로딩중"
+                          }
+                          diff={
+                            allocationRate && allocationRateCompare && !isPartial
+                              ? diffPct(allocationRate.rate, allocationRateCompare.rate)
+                              : null
+                          }
                         />
                         <KPICard
                           label="CVR"

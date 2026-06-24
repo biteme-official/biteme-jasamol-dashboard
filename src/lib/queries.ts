@@ -49,6 +49,7 @@ function innerSubquery(start: Date, end: Date): string {
       END AS coupon,
       wt_order_product.division_reserve_product_price AS reserve_raw,
       wt_order_product.division_deposit_product_price AS deposit_raw,
+      IFNULL(wt_admin.allocation_rate, 0) AS allocation_rate,
       ROUND(IF(SUM(wt_order_product.total_price) = 0,
         ROUND(wt_order_product_trans.trans_price /
               COUNT(wt_order_product.product_ocode)
@@ -196,6 +197,39 @@ export function productPartMapSQL(): string {
     FROM wt_product
     LEFT JOIN wt_admin ON wt_product.supplier = wt_admin.\`no\`
     LEFT JOIN wt_code2 ON wt_product.brand_cd = wt_code2.code_cd2
+  `;
+}
+
+export function allocationRateSummarySQL(start: Date, end: Date): string {
+  return `
+    SELECT
+      SUM(coupon + reserve + deposit - (coupon * allocation_rate)) AS total_fee,
+      SUM(net_sales) AS witrak_net_sales
+    FROM (
+      SELECT
+        coupon,
+        allocation_rate,
+        reserve_raw + IF(trans = 0, 0,
+                   IF(trans_reserve = 0, 0,
+                      ROUND(trans_reserve * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                   )) AS reserve,
+        deposit_raw + IF(trans = 0, 0,
+                   IF(trans_deposit = 0, 0,
+                      ROUND(trans_deposit * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                   )) AS deposit,
+        price - coupon
+          - (reserve_raw + IF(trans = 0, 0,
+                     IF(trans_reserve = 0, 0,
+                        ROUND(trans_reserve * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          - (deposit_raw + IF(trans = 0, 0,
+                     IF(trans_deposit = 0, 0,
+                        ROUND(trans_deposit * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          + trans AS net_sales
+      FROM (${innerSubquery(start, end)}) AS sub
+      WHERE part = '위탁'
+    ) AS calc
   `;
 }
 
