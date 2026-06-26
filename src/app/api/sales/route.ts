@@ -10,6 +10,7 @@ interface SalesRow {
   userid: string;
   part: string;
   net_sales: number;
+  consignment_charge: number;
 }
 
 interface AddonRow {
@@ -59,6 +60,8 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
   const dailyMap: Record<string, { sales: number; orders: Set<string> }> = {};
   const hourlyMap: Record<number, { sales: number; orders: Set<string> }> = {};
 
+  let totalConsignmentCharge = 0;
+
   const addonByPart: Record<string, number> = {};
   const addonByDate: Record<string, number> = {};
   const addonByHour: Record<number, number> = {};
@@ -81,6 +84,7 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
   for (const row of rows) {
     const ns = Number(row.net_sales);
     totalSales += ns;
+    totalConsignmentCharge += Number(row.consignment_charge) || 0;
     orderSet.add(row.ocode);
 
     if (row.userid === "비회원") {
@@ -147,6 +151,7 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
     totalOrders,
     totalBuyers,
     aov: totalOrders ? Math.round(totalSales / totalOrders) : 0,
+    consignmentCharge: Math.round(totalConsignmentCharge),
     parts: Object.fromEntries(
       ["PB", "사입", "위탁", "미분류"]
         .filter((p) => parts[p])
