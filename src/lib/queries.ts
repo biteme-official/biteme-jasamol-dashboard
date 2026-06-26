@@ -97,7 +97,8 @@ function addonOptSQL(start: Date, end: Date): string {
       wt_order_product.product_ocode,
       CASE WHEN wt_order_product.product_ocode = '3454103' THEN 8998
            ELSE opt_cost_price
-      END AS opt_amount
+      END AS opt_amount,
+      IFNULL(wt_order_product.allocation_rate, 0) / 100 AS allocation_rate
     FROM wt_order_product_opt
     LEFT JOIN wt_order_product ON wt_order_product.product_ocode = wt_order_product_opt.product_ocode
     LEFT JOIN wt_product       ON wt_order_product.product_cd    = wt_product.product_cd

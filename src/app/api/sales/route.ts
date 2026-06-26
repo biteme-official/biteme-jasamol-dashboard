@@ -19,6 +19,7 @@ interface AddonRow {
   ocode: string;
   product_ocode: string;
   opt_amount: number;
+  allocation_rate: number;
 }
 
 interface PartData {
@@ -70,6 +71,8 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
     const amt = Number(a.opt_amount);
     totalAddon += amt;
     const p = a.part || "미분류";
+    // addon 항목은 쿠폰/적립금/예치금이 적용되지 않으므로 consignment_charge = 0
+    // allocation_rate는 향후 addon 부담금 산식 확장 시 활용
     addonByPart[p] = (addonByPart[p] || 0) + amt;
     const dateKey = typeof a.DAY === "string"
       ? a.DAY.slice(0, 10)
