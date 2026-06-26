@@ -61,7 +61,8 @@ function innerSubquery(start: Date, end: Date): string {
            (wt_order_product.total_price / SUM(wt_order_product.total_price)
             OVER (PARTITION BY wt_order_product.product_trans_seq, wt_order_product.ocode)))), 0) AS trans,
       wt_order_info.reserve_dc_trans_price AS trans_reserve,
-      wt_order_info.deposit_dc_trans_price AS trans_deposit
+      wt_order_info.deposit_dc_trans_price AS trans_deposit,
+      IFNULL(wt_order_product.allocation_rate, 0) / 100 AS allocation_rate
     FROM wt_order_product
     LEFT JOIN wt_order_info        ON wt_order_product.ocode         = wt_order_info.ocode
     LEFT JOIN wt_order_product_trans ON wt_order_product.product_ocode = wt_order_product_trans.product_ocode
@@ -122,7 +123,20 @@ export function salesSQL(start: Date, end: Date): string {
                    IF(trans_deposit = 0, 0,
                       ROUND(trans_deposit * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
                    )))
-        + trans AS net_sales
+        + trans AS net_sales,
+      CASE WHEN part = '위탁'
+        THEN coupon
+          + (reserve_raw + IF(trans = 0, 0,
+                     IF(trans_reserve = 0, 0,
+                        ROUND(trans_reserve * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          + (deposit_raw + IF(trans = 0, 0,
+                     IF(trans_deposit = 0, 0,
+                        ROUND(trans_deposit * (trans / SUM(trans) OVER (PARTITION BY ocode)), 0)
+                     )))
+          - (coupon * allocation_rate)
+        ELSE 0
+      END AS consignment_charge
     FROM (${innerSubquery(start, end)}) AS sub
   `;
 }
