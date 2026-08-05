@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   format,
   subDays,
@@ -72,15 +73,36 @@ export default function PeriodSelector({ onSelect }: Props) {
   const [customEnd, setCustomEnd] = useState("");
   const [open, setOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
+    if (!open) return;
+
+    function updatePos() {
+      if (btnRef.current) {
+        const r = btnRef.current.getBoundingClientRect();
+        setPopupPos({ top: r.bottom + 8, left: Math.max(8, r.right - 280) });
+      }
+    }
+    updatePos();
+
     function handleClick(e: MouseEvent) {
-      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+      if (
+        popupRef.current && !popupRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("mousedown", handleClick);
+    window.addEventListener("scroll", updatePos, true);
+    window.addEventListener("resize", updatePos);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("scroll", updatePos, true);
+      window.removeEventListener("resize", updatePos);
+    };
   }, [open]);
 
   function handlePreset(label: string, rangeFn: () => [Date, Date]) {
@@ -114,10 +136,11 @@ export default function PeriodSelector({ onSelect }: Props) {
         </button>
       ))}
 
-      <div className="relative" ref={popupRef}>
+      <div>
         <button
+          ref={btnRef}
           onClick={() => setOpen(!open)}
-          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
             open || active === ""
               ? "bg-orange-500 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -126,8 +149,12 @@ export default function PeriodSelector({ onSelect }: Props) {
           기간 설정
         </button>
 
-        {open && (
-          <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-50 w-[280px]">
+        {open && createPortal(
+          <div
+            ref={popupRef}
+            style={{ position: "fixed", top: popupPos.top, left: popupPos.left, zIndex: 9999 }}
+            className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-[280px]"
+          >
             <div className="space-y-3">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
@@ -159,7 +186,8 @@ export default function PeriodSelector({ onSelect }: Props) {
                 조회
               </button>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </div>
