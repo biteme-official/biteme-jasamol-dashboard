@@ -26,7 +26,7 @@ function innerSubquery(start: Date, end: Date): string {
       wt_order_product.ocode,
       wt_order_product.product_ocode,
       wt_order_product.product_cd,
-      wt_order_product.product_nm,
+      wt_product.product_nm,
       wt_order_product.qty,
       wt_product.brand_cd,
       IFNULL(wt_code2.code_nm2, wt_product.brand_cd) AS brand_nm,
