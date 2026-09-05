@@ -10,6 +10,7 @@ interface SalesRow {
   userid: string;
   part: string;
   net_sales: number;
+  consignment_charge: number;
 }
 
 interface AddonRow {
@@ -18,6 +19,7 @@ interface AddonRow {
   ocode: string;
   product_ocode: string;
   opt_amount: number;
+  allocation_rate: number;
 }
 
 interface PartData {
@@ -59,6 +61,8 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
   const dailyMap: Record<string, { sales: number; orders: Set<string> }> = {};
   const hourlyMap: Record<number, { sales: number; orders: Set<string> }> = {};
 
+  let totalConsignmentCharge = 0;
+
   const addonByPart: Record<string, number> = {};
   const addonByDate: Record<string, number> = {};
   const addonByHour: Record<number, number> = {};
@@ -67,6 +71,8 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
     const amt = Number(a.opt_amount);
     totalAddon += amt;
     const p = a.part || "미분류";
+    // addon 항목은 쿠폰/적립금/예치금이 적용되지 않으므로 consignment_charge = 0
+    // allocation_rate는 향후 addon 부담금 산식 확장 시 활용
     addonByPart[p] = (addonByPart[p] || 0) + amt;
     const dateKey = typeof a.DAY === "string"
       ? a.DAY.slice(0, 10)
@@ -81,6 +87,7 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
   for (const row of rows) {
     const ns = Number(row.net_sales);
     totalSales += ns;
+    totalConsignmentCharge += Number(row.consignment_charge) || 0;
     orderSet.add(row.ocode);
 
     if (row.userid === "비회원") {
@@ -147,6 +154,7 @@ function aggregate(rows: SalesRow[], addonRows: AddonRow[], singleDay: boolean) 
     totalOrders,
     totalBuyers,
     aov: totalOrders ? Math.round(totalSales / totalOrders) : 0,
+    consignmentCharge: Math.round(totalConsignmentCharge),
     parts: Object.fromEntries(
       ["PB", "사입", "위탁", "미분류"]
         .filter((p) => parts[p])

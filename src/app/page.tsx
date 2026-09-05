@@ -26,6 +26,7 @@ interface SalesData {
   totalOrders: number;
   totalBuyers: number;
   aov: number;
+  consignmentCharge: number;
   parts: Record<string, PartData>;
   daily: { date: string; sales: number; orders: number }[];
   hourly: { hour: number; sales: number; orders: number }[] | null;
@@ -248,7 +249,7 @@ export default function Dashboard() {
               </div>
             ) : data ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
                   <KPICard
                     label="총 매출"
                     value={`${n(data.totalSales)}원`}
@@ -278,6 +279,12 @@ export default function Dashboard() {
                     const isPartial = start === end && end === todayStr;
                     return (
                       <>
+                        <KPICard
+                          label="위수탁부담금"
+                          value={`${n(data.consignmentCharge)}원`}
+                          diff={compare ? diffPct(data.consignmentCharge, compare.consignmentCharge) : null}
+                          prevValue={compare ? `${n(compare.consignmentCharge)}원` : undefined}
+                        />
                         <KPICard
                           label="DAU"
                           value={dau ? `${n(dau.totalDAU)}명` : "-"}
