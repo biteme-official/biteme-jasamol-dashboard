@@ -11,6 +11,7 @@ import BrandRanking from "@/components/BrandRanking";
 import ProductRanking from "@/components/ProductRanking";
 import TrafficAnalysis from "@/components/TrafficAnalysis";
 import ChannelAnalysis from "@/components/ChannelAnalysis";
+import { apiFetch } from "@/lib/portal-token";
 
 type Tab = "dashboard" | "traffic" | "channel";
 
@@ -106,10 +107,10 @@ export default function Dashboard() {
       }
 
       const [salesRes, dauRes, brandRes, rankRes] = await Promise.all([
-        fetch(`/api/sales?${params}`),
-        fetch(`/api/dau?${params}`),
-        fetch(`/api/brand-ranking?start=${start}&end=${end}`),
-        fetch(`/api/product-ranking?start=${start}&end=${end}`),
+        apiFetch(`/api/sales?${params}`),
+        apiFetch(`/api/dau?${params}`),
+        apiFetch(`/api/brand-ranking?start=${start}&end=${end}`),
+        apiFetch(`/api/product-ranking?start=${start}&end=${end}`),
       ]);
 
       const salesJson = await salesRes.json();
