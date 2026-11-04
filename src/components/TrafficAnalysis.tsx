@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { apiFetch } from "@/lib/portal-token";
 import {
   BarChart,
   Bar,
@@ -135,7 +136,7 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         `/api/amplitude/traffic?start=${start}&end=${end}`
       );
       if (!res.ok) {
@@ -162,8 +163,8 @@ export default function TrafficAnalysis({ start, end, label }: Props) {
     setFunnelLoading(true);
     try {
       const [funnelRes, promoRes] = await Promise.all([
-        fetch(`/api/amplitude/funnel?start=${start}&end=${end}`),
-        fetch(`/api/amplitude/promotion-funnel?start=${start}&end=${end}`),
+        apiFetch(`/api/amplitude/funnel?start=${start}&end=${end}`),
+        apiFetch(`/api/amplitude/promotion-funnel?start=${start}&end=${end}`),
       ]);
       if (funnelRes.ok) {
         setFunnel(await funnelRes.json());

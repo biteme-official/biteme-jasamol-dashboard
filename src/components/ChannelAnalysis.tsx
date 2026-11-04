@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { apiFetch } from "@/lib/portal-token";
 import {
   BarChart,
   Bar,
@@ -77,7 +78,7 @@ export default function ChannelAnalysis({ start, end, label }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/channels?start=${start}&end=${end}`);
+      const res = await apiFetch(`/api/channels?start=${start}&end=${end}`);
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error || `HTTP ${res.status}`);
